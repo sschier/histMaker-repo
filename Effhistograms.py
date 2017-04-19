@@ -22,9 +22,9 @@ class lephists:
         self.newdir=topdir.mkdir(tag)
         self.newdir.cd()
 
-        self.hists["Rll"]=ROOT.TH1F("h_"+tag+"_Rll",tag+"_Rll; Rll; Events/0.1 GeV)",50 ,0,5)
-        self.hists["Ptll"]=ROOT.TH1F("h_"+tag+"_Ptll",tag+"_Ptll; Ptll; Events/0.1 GeV)",50 ,0,5)
-        self.hists["Mll"]=ROOT.TH1F("h_"+tag+"_Mll",tag+"_Mll; Mll; Events/0.1 GeV)",50 ,0,5)
+        self.hists["Rll"]=ROOT.TH1F("h_"+tag+"_Rll",tag+"_Rll; #DeltaR_{lep_{1}-lep_{2}} [mm];Events/(0.1 mm)",40, 0., 4.0)
+        self.hists["Ptll"]=ROOT.TH1F("h_"+tag+"_Ptll",tag+"_Ptll; dilepton p_{T} [GeV]; Events/(2 GeV)",30, 0, 60)
+        self.hists["Mll"]=ROOT.TH1F("h_"+tag+"_Mll",tag+"_Mll; dilepton invariant mass [GeV]; Events/(2 GeV) ",30, 0, 60)
 
         topdir.cd()
         self.collections={}
@@ -51,10 +51,32 @@ class lephists:
         #intLumi = 36300.0 #Same as used by Lorenzo Rossini
         intLumi = 1.0
 
-        #Get variables from tree for filling histogram
-        MET=event.met_Et
+        nLep_base = event.nLep_base
+        #Initialize TLorentz vectors
+        lep1Vec = ROOT.TLorentzVector()
+        lep2Vec = ROOT.TLorentzVector()
 
-        genWeight = event.genWeight
+        #Prefer opposite sign lepton pairs over same sign pairs
+        obs = observable()
+        lep1Vec, lep1Charge, lep1Flavor = obs.getLep1TLVChargeFlavor(event)
+        lep2Vec, lep2Charge, lep2Flavor = obs.getLep2TLVChargeFlavor(event)
+
+
+        #Calculate dilepton variables
+        lepPairVec = lep1Vec + lep2Vec
+        mll = lepPairVec.M()
+        ptll = lepPairVec.Pt()
+        drll = -999.
+        if nLep_base > 1:
+            drll  = lep2Vec.DeltaR(lep1Vec)
+
+        #Recalculate generator weight
+        newNorm = renorm(self.sumWHist, event)
+        if self.isdata:
+            genWeight = 1.0
+        else:
+            genWeight = newNorm.getGenWeight(intLumi)
+        #genWeight = event.genWeight
 
         #Calculating weight
         if self.isdata:
@@ -62,7 +84,9 @@ class lephists:
         else:
             totalWeight = float(event.SherpaVjetsNjetsWeight*event.ttbarNNLOWeight*event.pileupWeight*event.eventWeight*event.leptonWeight*event.jvtWeight*event.bTagWeight*genWeight) #TODO: NO TRIGGER WEIGHT!!
 
-        self.hists["MET"].Fill(float(MET), totalWeight)
+        self.hists["Rll"].Fill(float(drll), totalWeight)
+        self.hists["Ptll"].Fill(float(ptll), totalWeight)
+        self.hists["Mll"].Fill(float(mll), totalWeight)
 
 
 #------------------------------------------------------------------

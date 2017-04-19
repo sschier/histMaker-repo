@@ -25,13 +25,13 @@ def baseLeptonEE(event, hc, CutsDict):
     else: return False
 #======================================================================
 def baseLeptonMM(event, hc, CutsDict):
-    if( CutsDict["2BaseLep"] == True and CutsDict["mmEvent"] == True ):
+    if( CutsDict["2BaseLep"] == True and CutsDict["mumuEvent"] == True ):
         hc.fill(event, "skim")
         return True
     else: return False
 #======================================================================
 def baseLeptonEM(event, hc, CutsDict):
-    if( CutsDict["2BaseLep"] == True and CutsDict["mmEvent"] == False and CutsDict["eeEvent"] == False ):
+    if( CutsDict["2BaseLep"] == True and CutsDict["mumuEvent"] == False and CutsDict["eeEvent"] == False ):
         hc.fill(event, "skim")
         return True
     else: return False
@@ -43,13 +43,13 @@ def signalLeptonEE(event, hc, CutsDict):
     else: return False
 #======================================================================
 def signalLeptonMM(event, hc, CutsDict):
-    if( CutsDict["2SigLep"] == True and CutsDict["mmEvent"] == True ):
+    if( CutsDict["2SigLep"] == True and CutsDict["mumuEvent"] == True ):
         hc.fill(event, "skim")
         return True
     else: return False
 #======================================================================
 def signalLeptonEM(event, hc, CutsDict):
-    if( CutsDict["2SigLep"] == True and CutsDict["mmEvent"] == False and CutsDict["eeEvent"] == False ):
+    if( CutsDict["2SigLep"] == True and CutsDict["mumuEvent"] == False and CutsDict["eeEvent"] == False ):
         hc.fill(event, "skim")
         return True
     else: return False
@@ -1107,7 +1107,7 @@ def analyze(infile, weightfile, tree, DSID, data, signal, outfile, debug, region
         nBTag = event.nBJet30_MV2c10
         RunNumer = event.RandomRunNumber
 
-        if region == "trigger":
+        if( region == "trigger" or region == "dilepton" ):
             obs = observable()
             index1, index2 = obs.findSignalPairs(event) #Decide leading and subeading lepton based on opposite sign match
             if (index1 == 0 or index2 == 0):
@@ -1263,7 +1263,8 @@ def analyze(infile, weightfile, tree, DSID, data, signal, outfile, debug, region
         if (eventcount%1000 == 0): print "%i events analyzed" % eventcount
         if debug:
             if eventcount == 1: 
-                print MET
+                if region == 'dilepton':
+                    print 'Recalculating generator Weight!!'
 
         #------------------------------
         #trigger efficiency regions
